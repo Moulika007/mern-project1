@@ -2,50 +2,46 @@ import { useEffect, useState } from 'react';
 import api from '../utils/api';
 import PetCard from '../components/UI/PetCard';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
-import HeroSlider from '../components/UI/HeroSlider'; // Import Slider
+import HeroSlider from '../components/UI/HeroSlider';
 
-const Dogs = () => {
+const Birds = () => {
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedBreed, setSelectedBreed] = useState('All');
   const [breeds, setBreeds] = useState([]);
 
-  // Slider Images for Dogs
   const heroImages = [
-    'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=1200',
-    'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=1200',
-    'https://images.unsplash.com/photo-1596492784531-6e6eb5ea9205?w=1200'
+    'https://images.unsplash.com/photo-1552728089-57bdde30ebd1?w=1200',
+    'https://images.unsplash.com/photo-1452570053594-1b985d6ea890?w=1200',
+    'https://images.unsplash.com/photo-1522926193341-e9e6d9b8600d?w=1200'
   ];
 
   useEffect(() => {
-    const fetchDogs = async () => {
+    const fetchBirds = async () => {
       try {
-        const { data } = await api.get('/pets/category/Dog');
+        const { data } = await api.get('/pets/category/Bird');
         setPets(data.pets);
         setBreeds(['All', ...new Set(data.pets.map(p => p.breed))]);
       } catch (error) {
-        console.error("Error fetching dogs:", error);
+        console.error("Error fetching birds:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchDogs();
+    fetchBirds();
   }, []);
 
   const filteredPets = selectedBreed === 'All' ? pets : pets.filter(p => p.breed === selectedBreed);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
-      {/* 1. Hero Slider Section */}
       <HeroSlider 
-        title="Loyal Companions" 
-        subtitle="Find a furry friend who will love you unconditionally." 
+        title="Feathered Friends" 
+        subtitle="Bring song and color into your life." 
         images={heroImages} 
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* 2. Filter Section */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Browse by Breed</h2>
           <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
@@ -65,14 +61,9 @@ const Dogs = () => {
           </div>
         </div>
 
-        {/* 3. Grid Section */}
-        {loading ? (
-          <div className="flex justify-center py-20"><LoadingSpinner size="large" /></div>
-        ) : (
+        {loading ? <div className="flex justify-center py-20"><LoadingSpinner size="large" /></div> : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {filteredPets.map(pet => (
-              <PetCard key={pet._id} pet={pet} />
-            ))}
+            {filteredPets.map(pet => <PetCard key={pet._id} pet={pet} />)}
           </div>
         )}
       </div>
@@ -80,4 +71,4 @@ const Dogs = () => {
   );
 };
 
-export default Dogs;
+export default Birds;

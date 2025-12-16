@@ -1,264 +1,269 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Search, ArrowRight, ShieldCheck, Heart, Home as HomeIcon, Star, Smile, BookOpen, HelpCircle, DollarSign, Phone, Lock } from 'lucide-react';
+import api from '../utils/api';
 import PetCard from '../components/UI/PetCard';
-import { Search, Filter, Heart, Star, MapPin } from 'lucide-react';
+import LoadingSpinner from '../components/UI/LoadingSpinner';
+import HeroSlider from '../components/UI/HeroSlider';
 
 const Home = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [priceFilter, setPriceFilter] = useState('All');
+  const [featuredPets, setFeaturedPets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  // Enhanced Mock Data - Dogs first as requested
-  const [pets] = useState([
-    { 
-      _id: '1', 
-      name: 'Max', 
-      category: 'Dog', 
-      price: 0, 
-      image: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=600&q=80', 
-      description: 'Friendly Golden Retriever who loves kids and playing fetch. House trained and great with other pets.',
-      age: '3 years',
-      location: 'Downtown Shelter',
-      traits: ['Friendly', 'House Trained', 'Good with Kids']
-    },
-    { 
-      _id: '2', 
-      name: 'Charlie', 
-      category: 'Dog', 
-      price: 150, 
-      image: 'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?w=600&q=80', 
-      description: 'Energetic Border Collie mix. Perfect for active families who love outdoor adventures.',
-      age: '2 years',
-      location: 'Westside Rescue',
-      traits: ['Energetic', 'Smart', 'Loyal']
-    },
-    { 
-      _id: '3', 
-      name: 'Cooper', 
-      category: 'Dog', 
-      price: 0, 
-      image: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=600&q=80', 
-      description: 'Sweet Labrador who loves to run and play fetch. Great companion for jogging.',
-      age: '4 years',
-      location: 'City Animal Center',
-      traits: ['Playful', 'Trained', 'Active']
-    },
-    { 
-      _id: '4', 
-      name: 'Buddy', 
-      category: 'Dog', 
-      price: 200, 
-      image: 'https://images.unsplash.com/photo-1551717743-49959800b1f6?w=600&q=80', 
-      description: 'Gentle German Shepherd mix. Protective yet loving, perfect family guardian.',
-      age: '5 years',
-      location: 'North Valley Shelter',
-      traits: ['Protective', 'Gentle', 'Loyal']
-    },
-    { 
-      _id: '5', 
-      name: 'Luna', 
-      category: 'Dog', 
-      price: 0, 
-      image: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=600&q=80', 
-      description: 'Adorable Husky mix with beautiful blue eyes. Loves cold weather and long walks.',
-      age: '1 year',
-      location: 'Mountain Rescue',
-      traits: ['Beautiful', 'Active', 'Friendly']
-    },
-    { 
-      _id: '6', 
-      name: 'Bella', 
-      category: 'Cat', 
-      price: 75, 
-      image: 'https://images.unsplash.com/photo-1513245543132-31f507417b26?w=600&q=80', 
-      description: 'Quiet Persian cat who loves naps and gentle cuddles. Perfect for calm households.',
-      age: '3 years',
-      location: 'Downtown Shelter',
-      traits: ['Quiet', 'Cuddly', 'Independent']
-    },
-    { 
-      _id: '7', 
-      name: 'Rocky', 
-      category: 'Dog', 
-      price: 100, 
-      image: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&q=80', 
-      description: 'Strong Pitbull mix with a heart of gold. Loves belly rubs and playing tug-of-war.',
-      age: '4 years',
-      location: 'Eastside Rescue',
-      traits: ['Strong', 'Loving', 'Playful']
-    },
-    { 
-      _id: '8', 
-      name: 'Daisy', 
-      category: 'Dog', 
-      price: 0, 
-      image: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=600&q=80', 
-      description: 'Sweet Beagle mix who loves treats and exploring. Great nose for adventures!',
-      age: '2 years',
-      location: 'South Bay Shelter',
-      traits: ['Curious', 'Sweet', 'Food Motivated']
-    }
-  ]);
+  // Search State
+  const [searchCategory, setSearchCategory] = useState('Dog');
+  const [searchLocation, setSearchLocation] = useState('');
 
-  // Filter pets based on search and filters
-  const filteredPets = pets.filter(pet => {
-    const matchesSearch = pet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         pet.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || pet.category === selectedCategory;
-    const matchesPrice = priceFilter === 'All' || 
-                        (priceFilter === 'Free' && pet.price === 0) ||
-                        (priceFilter === 'Paid' && pet.price > 0);
-    
-    return matchesSearch && matchesCategory && matchesPrice;
-  });
+  // Premium Hero Images
+  const heroImages = [
+    'https://images.unsplash.com/photo-1450778869180-41d0601e046e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=90',
+    'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=90',
+    'https://images.unsplash.com/photo-1555685812-4b943f3db990?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=90',
+    'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=90' 
+  ];
 
-  const categories = ['All', 'Dog', 'Cat', 'Bird'];
-  const priceOptions = ['All', 'Free', 'Paid'];
+  // Resources Data (From your screenshot)
+  const resources = [
+    { title: 'Pet Care Guide', link: '/care-guide', icon: <BookOpen className="w-6 h-6 text-green-500" />, desc: 'Tips for new pet parents.' },
+    { title: 'Adoption FAQs', link: '/faqs', icon: <HelpCircle className="w-6 h-6 text-orange-500" />, desc: 'Common questions answered.' },
+    { title: 'Success Stories', link: '/success', icon: <Star className="w-6 h-6 text-yellow-500" />, desc: 'Read happy adoption tales.' },
+    { title: 'Safety Tips', link: '/safety', icon: <Lock className="w-6 h-6 text-blue-500" />, desc: 'Keep your pet safe & secure.' },
+    { title: 'Pricing Guide', link: '/pricing', icon: <DollarSign className="w-6 h-6 text-purple-500" />, desc: 'Understanding adoption fees.' },
+    { title: 'Support Center', link: '/support', icon: <Phone className="w-6 h-6 text-red-500" />, desc: 'We are here to help you.' }
+  ];
+
+  useEffect(() => {
+    const fetchPets = async () => {
+      try {
+        const { data } = await api.get('/pets/featured');
+        setFeaturedPets(data);
+      } catch (error) {
+        console.error("Error fetching pets", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPets();
+  }, []);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchCategory === 'Dog') navigate('/dogs');
+    else if (searchCategory === 'Cat') navigate('/cats');
+    else if (searchCategory === 'Bird') navigate('/birds');
+    else navigate('/all-pets');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white">
-        <div className="container mx-auto px-6 py-20">
-          <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-              Find Your Perfect 
-              <span className="text-yellow-300"> Furry Friend</span>
-            </h1>
-            <p className="text-xl md:text-2xl mb-8 text-indigo-100">
-              🐕 Discover amazing dogs and pets waiting for their forever homes
-            </p>
+      
+      {/* 1. HERO SECTION */}
+      <div className="relative">
+        <HeroSlider 
+          images={heroImages} 
+          title="Bringing Joy Home"
+          subtitle="Connect with thousands of adoptable pets from trusted shelters and owners."
+        />
+        
+        {/* Premium Floating Search Bar */}
+        <div className="absolute bottom-[-50px] left-0 right-0 z-20 px-4">
+          <div className="max-w-5xl mx-auto bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col md:flex-row gap-6 items-end border border-white/20">
             
-            {/* Search Bar */}
-            <div className="max-w-2xl mx-auto relative">
-              <div className="flex bg-white rounded-2xl shadow-2xl overflow-hidden">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    placeholder="Search for Golden Retriever, Puppy, etc..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 text-gray-900 text-lg focus:outline-none"
-                  />
-                </div>
-                <button className="bg-indigo-600 hover:bg-indigo-700 px-8 py-4 text-white font-semibold transition-colors duration-200">
-                  Search
-                </button>
+            <div className="w-full md:w-1/3">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Pet Type</label>
+              <div className="relative">
+                <select 
+                  value={searchCategory}
+                  onChange={(e) => setSearchCategory(e.target.value)}
+                  className="w-full bg-gray-50 hover:bg-gray-100 border-none rounded-2xl px-5 py-4 font-bold text-gray-800 focus:ring-4 focus:ring-orange-100 transition-all appearance-none cursor-pointer"
+                >
+                  <option value="Dog">🐶 Dog</option>
+                  <option value="Cat">🐱 Cat</option>
+                  <option value="Bird">🐦 Bird</option>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Stats Section */}
-      <div className="bg-white py-12 border-b">
-        <div className="container mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-3xl font-bold text-indigo-600 mb-2">15,000+</div>
-              <div className="text-gray-600">Pets Adopted</div>
+            <div className="w-full md:w-1/3">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Location</label>
+              <input 
+                type="text" 
+                placeholder="Enter City (e.g. Mumbai)" 
+                value={searchLocation}
+                onChange={(e) => setSearchLocation(e.target.value)}
+                className="w-full bg-gray-50 hover:bg-gray-100 border-none rounded-2xl px-5 py-4 font-bold text-gray-800 focus:ring-4 focus:ring-orange-100 placeholder-gray-400 transition-all"
+              />
             </div>
-            <div>
-              <div className="text-3xl font-bold text-indigo-600 mb-2">500+</div>
-              <div className="text-gray-600">Partner Shelters</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-indigo-600 mb-2">24/7</div>
-              <div className="text-gray-600">Support Available</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-indigo-600 mb-2">100%</div>
-              <div className="text-gray-600">Love Guaranteed</div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Filters Section */}
-      <div className="bg-white py-6 sticky top-20 z-40 shadow-sm">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <Filter className="w-5 h-5 text-gray-600" />
-              <span className="font-semibold text-gray-700">Filters:</span>
-              
-              {/* Category Filter */}
-              <select 
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            <div className="w-full md:w-1/3">
+              <button 
+                onClick={handleSearch}
+                className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold py-4 rounded-2xl transition-all shadow-lg hover:shadow-orange-200 transform hover:-translate-y-1 flex items-center justify-center text-lg"
               >
-                {categories.map(category => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-              
-              {/* Price Filter */}
-              <select 
-                value={priceFilter}
-                onChange={(e) => setPriceFilter(e.target.value)}
-                className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                {priceOptions.map(option => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
+                <Search className="w-6 h-6 mr-2" /> Find Pet
+              </button>
             </div>
-            
-            <div className="text-gray-600">
-              <span className="font-semibold">{filteredPets.length}</span> pets found
-            </div>
+
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-6 py-12">
-        {/* Section Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            🐕 Amazing Dogs Looking for Homes
-          </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Each of these wonderful dogs has a unique personality and is ready to bring joy to your family
-          </p>
-        </div>
+      {/* Spacer */}
+      <div className="h-24 md:h-32"></div>
 
-        {/* Pet Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {filteredPets.map(pet => (
-            <PetCard key={pet._id} pet={pet} />
+      {/* 2. TRUST STATS */}
+      <div className="max-w-7xl mx-auto px-4 mb-20">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-gray-200">
+          {[
+            { label: 'Pets Adopted', val: '2,500+', icon: <HomeIcon className="w-6 h-6 text-orange-500 mb-2 mx-auto" /> },
+            { label: 'Active Listings', val: '800+', icon: <Search className="w-6 h-6 text-indigo-500 mb-2 mx-auto" /> },
+            { label: 'Happy Families', val: '2,000+', icon: <Smile className="w-6 h-6 text-green-500 mb-2 mx-auto" /> },
+            { label: 'Verified Shelters', val: '150+', icon: <ShieldCheck className="w-6 h-6 text-blue-500 mb-2 mx-auto" /> },
+          ].map((stat, idx) => (
+            <div key={idx} className="p-2">
+              {stat.icon}
+              <h3 className="text-3xl font-bold text-gray-900">{stat.val}</h3>
+              <p className="text-sm text-gray-500 font-medium uppercase tracking-wide mt-1">{stat.label}</p>
+            </div>
           ))}
         </div>
-        
-        {filteredPets.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-2xl font-bold text-gray-700 mb-2">No pets found</h3>
-            <p className="text-gray-500">Try adjusting your search or filters</p>
+      </div>
+
+      {/* 3. BROWSE BY CATEGORY */}
+      <div className="bg-white py-20">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Find Your Companion</h2>
+            <div className="w-20 h-1 bg-orange-500 mx-auto rounded-full"></div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { name: 'Dogs', path: '/dogs', img: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800', subtitle: 'Loyal & Playful' },
+              { name: 'Cats', path: '/cats', img: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800', subtitle: 'Independent & Cute' },
+              { name: 'Birds', path: '/birds', img: 'https://images.unsplash.com/photo-1552728089-57bdde30ebd1?w=800', subtitle: 'Colorful & Chirpy' }
+            ].map((cat) => (
+              <Link 
+                key={cat.name} 
+                to={cat.path}
+                className="group relative h-80 rounded-3xl overflow-hidden shadow-lg cursor-pointer"
+              >
+                <img 
+                  src={cat.img} 
+                  alt={cat.name} 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-8 flex flex-col justify-end">
+                  <h3 className="text-3xl font-bold text-white mb-1 group-hover:translate-x-2 transition-transform duration-300">{cat.name}</h3>
+                  <p className="text-gray-300 font-medium group-hover:translate-x-2 transition-transform duration-300 delay-75">{cat.subtitle}</p>
+                  <div className="mt-4 w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center group-hover:bg-orange-500 transition-colors">
+                    <ArrowRight className="text-white" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 4. FEATURED PETS */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Featured Pets</h2>
+            <p className="text-gray-500 mt-2 text-lg">New arrivals looking for a loving home</p>
+          </div>
+          <Link to="/all-pets" className="group flex items-center bg-white border border-gray-200 px-6 py-3 rounded-full text-indigo-600 font-bold hover:bg-indigo-50 transition-all shadow-sm hover:shadow-md">
+            View All <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
+
+        {loading ? <div className="flex justify-center"><LoadingSpinner size="large" /></div> : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {featuredPets.map((pet) => <PetCard key={pet._id} pet={pet} />)}
           </div>
         )}
       </div>
 
-      {/* Call to Action Section */}
-      <div className="bg-indigo-600 text-white py-16">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="text-4xl font-bold mb-4">Ready to Add a New Family Member?</h2>
-          <p className="text-xl mb-8 text-indigo-100">Join thousands of happy families who found their perfect pet</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/dogs" className="bg-white text-indigo-600 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 shadow-xl">
-              🐕 Find Dogs
-            </Link>
-            <Link to="/cats" className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:text-indigo-600 transition-all duration-200 transform hover:scale-105">
-              🐱 Find Cats
-            </Link>
-            <Link to="/sell" className="bg-yellow-400 text-indigo-900 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-yellow-300 transition-all duration-200 transform hover:scale-105">
-              💰 List Your Pet
-            </Link>
+      {/* 5. WHY CHOOSE US (Updated Design) */}
+      <div className="bg-indigo-900 text-white py-24 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+
+        <div className="max-w-7xl mx-auto px-4 relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Why Adopt from PetHaven?</h2>
+            <p className="text-indigo-200 text-lg">We make the adoption process transparent, safe, and joyful.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {[
+              { title: 'Verified Profiles', desc: 'Every listing is checked for safety.', icon: <ShieldCheck className="w-12 h-12 text-green-400" /> },
+              { title: 'Health Checks', desc: 'Vaccination and health records included.', icon: <Heart className="w-12 h-12 text-red-400" /> },
+              { title: 'Adoption Support', desc: 'Guidance throughout your journey.', icon: <Star className="w-12 h-12 text-yellow-400" /> }
+            ].map((item, idx) => (
+              <div key={idx} className="bg-white/10 backdrop-blur-sm p-8 rounded-3xl border border-white/10 hover:bg-white/20 transition-all">
+                <div className="mb-6 bg-white/10 w-20 h-20 rounded-2xl flex items-center justify-center">
+                  {item.icon}
+                </div>
+                <h3 className="text-2xl font-bold mb-3">{item.title}</h3>
+                <p className="text-indigo-200 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
+
+      {/* 6. NEW: RESOURCES & SUPPORT SECTION (Based on your image) */}
+      <div className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Resources & Support</h2>
+            <p className="text-gray-500">Everything you need to know about adopting and caring for your pet.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {resources.map((res, index) => (
+              <Link 
+                key={index} 
+                to={res.link} 
+                className="flex items-start p-6 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all border border-gray-100 group"
+              >
+                <div className="bg-gray-50 p-3 rounded-xl mr-4 group-hover:scale-110 transition-transform">
+                  {res.icon}
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-gray-900 group-hover:text-indigo-600 transition-colors mb-1">{res.title}</h3>
+                  <p className="text-gray-500 text-sm leading-relaxed">{res.desc}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 7. NEWSLETTER CTA */}
+      <div className="max-w-5xl mx-auto px-4 -mt-10 relative z-20 mb-20">
+        <div className="bg-gradient-to-r from-orange-500 to-red-600 rounded-3xl p-8 md:p-12 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 text-white">
+          <div className="md:w-1/2">
+            <h3 className="text-3xl font-bold mb-2">Join our Newsletter</h3>
+            <p className="text-orange-100">Get updates on new pets and care tips directly to your inbox.</p>
+          </div>
+          <div className="md:w-1/2 w-full flex gap-2">
+            <input 
+              type="email" 
+              placeholder="Enter your email" 
+              className="flex-grow px-6 py-4 rounded-xl text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-white"
+            />
+            <button className="bg-gray-900 hover:bg-black text-white px-8 py-4 rounded-xl font-bold transition-colors">
+              Subscribe
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 };

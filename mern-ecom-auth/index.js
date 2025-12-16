@@ -1,48 +1,38 @@
 const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv').config();
-const connectDB = require('./config/db');
-const port = process.env.PORT || 5000;
+const router = express.Router();
+const {
+  registerUser,
+  loginUser,
+  getUserProfile,
+  updateUserProfile,
+  addToFavorites,
+  removeFromFavorites,
+  getFavorites
+} = require('../controller/userController');
+const { protect } = require('../authMiddleware');
+const { body } = require('express-validator');
 
-// Connect to Database
-connectDB();
+// Validation middleware
+const validateRegister = [
+  body('name').notEmpty().withMessage('Name is required'),
+  body('email').isEmail().withMessage('Valid email is required'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+];
 
-const app = express();
+const validateLogin = [
+  body('email').isEmail().withMessage('Valid email is required'),
+  body('password').notEmpty().withMessage('Password is required')
+];
 
-// Middleware
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
-  credentials: true
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Public routes
+router.post('/register', validateRegister, registerUser);
+router.post('/login', validateLogin, loginUser);
 
-// Error handling middleware
-const errorHandler = (err, req, res, next) => {
-  const statusCode = res.statusCode ? res.statusCode : 500;
-  res.status(statusCode);
-  res.json({
-    message: err.message,
-    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
-  });
-};
+// Protected routes
+router.get('/profile', protect, getUserProfile);
+router.put('/profile', protect, updateUserProfile);
+router.get('/favorites', protect, getFavorites);
+router.post('/favorites/:petId', protect, addToFavorites);
+router.delete('/favorites/:petId', protect, removeFromFavorites);
 
-// Routes
-app.use('/api/pets', require('./routes/petRoutes'));
-app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/products', require('./routes/productRoute')); // Keep for backward compatibility
-
-// Health check route
-app.get('/api/health', (req, res) => {
-  res.json({ message: 'PetHaven API is running!', timestamp: new Date().toISOString() });
-});
-
-// Error handler
-app.use(errorHandler);
-
-// Start Server
-app.listen(port, () => {
-  console.log(`🚀 PetHaven Server started on port ${port}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🌐 API Health: http://localhost:${port}/api/health`);
-});
+module.exports = router;

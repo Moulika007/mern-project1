@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, MapPin, Calendar } from 'lucide-react';
+import { Heart, MapPin, Info } from 'lucide-react';
+import AuthContext from '../../context/AuthContext';
 
 const PetCard = ({ pet }) => {
   const [isLiked, setIsLiked] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -12,120 +13,86 @@ const PetCard = ({ pet }) => {
     setIsLiked(likedPets.some(p => p._id === pet._id));
   }, [pet._id]);
 
-  const handleAdoptClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    navigate('/login', { state: { returnTo: `/pet/${pet._id}` } });
-  };
-
   const handleLikeClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const newLikedState = !isLiked;
-    setIsLiked(newLikedState);
-    
-    // Store in localStorage
     const likedPets = JSON.parse(localStorage.getItem('likedPets') || '[]');
-    if (newLikedState) {
-      if (!likedPets.find(p => p._id === pet._id)) {
-        likedPets.push(pet);
-      }
+    let newLikedState;
+    if (isLiked) {
+      const filtered = likedPets.filter(p => p._id !== pet._id);
+      localStorage.setItem('likedPets', JSON.stringify(filtered));
+      newLikedState = false;
     } else {
-      const index = likedPets.findIndex(p => p._id === pet._id);
-      if (index > -1) likedPets.splice(index, 1);
+      likedPets.push(pet);
+      localStorage.setItem('likedPets', JSON.stringify(likedPets));
+      newLikedState = true;
     }
-    localStorage.setItem('likedPets', JSON.stringify(likedPets));
-    
-    // Animation
-    const button = e.currentTarget;
-    button.classList.add('animate-bounce');
-    setTimeout(() => button.classList.remove('animate-bounce'), 600);
+    setIsLiked(newLikedState);
+    window.dispatchEvent(new Event("favoritesUpdated"));
+    window.dispatchEvent(new Event("storage"));
+  };
+
+  const handleViewDetails = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (user) {
+      navigate(`/pet/${pet._id}`);
+    } else {
+      navigate('/signup', { state: { returnTo: `/pet/${pet._id}` } });
+    }
   };
 
   return (
     <div 
-      className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden group border border-orange-100 hover:border-orange-300"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 group flex flex-col h-full"
+      onClick={handleViewDetails}
     >
       {/* Image Container */}
-      <div className="relative overflow-hidden">
+      <div className="relative h-60 overflow-hidden">
         <img 
-          src={pet.image} 
+          src={pet.images && pet.images.length > 0 ? pet.images[0] : 'https://via.placeholder.com/300'} 
           alt={pet.name} 
-          className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110" 
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
         />
         
-        {/* Category Badge */}
-        <div className="absolute top-4 left-4">
-          <span className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
-            🐕 {pet.category}
-          </span>
-        </div>
-        
-        {/* Heart Icon - Fixed positioning at top */}
+        {/* Like Button */}
         <button 
           onClick={handleLikeClick}
-          className="absolute top-4 right-4 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all duration-200 transform hover:scale-110 z-10"
+          className="absolute top-3 right-3 p-2.5 bg-white/80 backdrop-blur-sm rounded-full shadow-sm hover:bg-white transition-all"
         >
-          <Heart 
-            className={`w-5 h-5 transition-all duration-200 ${
-              isLiked ? 'fill-red-500 text-red-500 scale-110' : 'text-gray-600 hover:text-red-500'
-            }`} 
-          />
+          <Heart className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
         </button>
-        
-        {/* Price Overlay */}
-        <div className="absolute bottom-4 right-4">
-          <span className="bg-gradient-to-r from-yellow-400 to-orange-400 text-gray-900 px-3 py-1 rounded-full text-lg font-bold shadow-lg">
-            {pet.price > 0 ? `💰 $${pet.price}` : "🆓 Free"}
-          </span>
+
+        {/* Breed Badge */}
+        <div className="absolute top-3 left-3 bg-indigo-900/80 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full">
+          {pet.breed}
         </div>
       </div>
 
-      {/* Card Body */}
-      <div className="p-6 bg-gradient-to-b from-white to-orange-50">
-        {/* Pet Name and Age */}
-        <div className="flex justify-between items-start mb-3">
-          <h3 className="text-xl font-bold text-gray-900 group-hover:text-orange-600 transition-colors duration-200">
+      {/* Content */}
+      <div className="p-5 flex flex-col flex-grow">
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="text-xl font-bold text-gray-900 group-hover:text-orange-600 transition-colors">
             {pet.name}
           </h3>
-          <div className="flex items-center text-orange-600 text-sm bg-orange-100 px-2 py-1 rounded-full">
-            <Calendar className="w-4 h-4 mr-1" />
-            {pet.age || '2 years'}
-          </div>
+          <span className="text-indigo-600 font-bold">
+             ₹{pet.price ? pet.price.toLocaleString('en-IN') : '0'}
+          </span>
         </div>
-        
-        {/* Location */}
-        <div className="flex items-center text-gray-600 text-sm mb-3 bg-white px-3 py-1 rounded-lg shadow-sm">
-          <MapPin className="w-4 h-4 mr-1 text-orange-500" />
-          <span>{pet.location || 'Local Shelter'}</span>
+
+        <div className="flex items-center text-gray-500 text-sm mb-4">
+          <MapPin className="w-4 h-4 mr-1 text-orange-500" /> 
+          <span className="truncate">{pet.location}</span>
         </div>
-        
-        {/* Description */}
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2 bg-white p-3 rounded-lg shadow-sm">
-          {pet.description}
-        </p>
-        
-        {/* Pet Traits */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {(pet.traits || ['Friendly', 'Trained']).slice(0, 3).map((trait, index) => (
-            <span 
-              key={index}
-              className="bg-gradient-to-r from-orange-100 to-red-100 text-orange-800 px-2 py-1 rounded-lg text-xs font-medium shadow-sm"
-            >
-              {trait}
-            </span>
-          ))}
+
+        <div className="mt-auto pt-4 border-t border-gray-100">
+           <button 
+             onClick={handleViewDetails}
+             className="w-full bg-white border border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white font-bold py-2.5 rounded-xl transition-all flex items-center justify-center"
+           >
+             <Info className="w-4 h-4 mr-2" /> View Details
+           </button>
         </div>
-        
-        {/* Action Button */}
-        <button 
-          onClick={handleAdoptClick}
-          className="w-full bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 hover:from-orange-600 hover:via-red-600 hover:to-pink-600 text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl animate-pulse hover:animate-none"
-        >
-          {pet.price > 0 ? `🛒 Buy Me Now!` : "🏠 Adopt Me Today!"}
-        </button>
       </div>
     </div>
   );

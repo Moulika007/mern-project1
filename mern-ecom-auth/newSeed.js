@@ -1,158 +1,111 @@
 const mongoose = require('mongoose');
-const dotenv = require('dotenv').config();
-const Pet = require('./models/Pet');
+const dotenv = require('dotenv');
 const connectDB = require('./config/db');
+const Pet = require('./models/Pet');
 
-// Sample data with comprehensive pet information
-const samplePets = [
+dotenv.config();
+
+// Helper to get diverse images from Unsplash
+const getImages = (keyword) => {
+  return [
+    `https://source.unsplash.com/600x400/?${keyword},pet`,
+    `https://source.unsplash.com/600x400/?${keyword},dog`,
+    `https://source.unsplash.com/600x400/?${keyword},cute`,
+    `https://source.unsplash.com/600x400/?${keyword},animal`,
+    `https://source.unsplash.com/600x400/?${keyword},puppy`,
+    `https://source.unsplash.com/600x400/?${keyword},playing`,
+    `https://source.unsplash.com/600x400/?${keyword},sleeping`,
+    `https://source.unsplash.com/600x400/?${keyword},park`
+  ];
+};
+
+const pets = [
+  // --- DOGS (Expanded Variety) ---
   {
-    name: 'Max',
-    category: 'Dog',
-    breed: 'Golden Retriever',
-    age: '3 years',
-    gender: 'Male',
-    size: 'Large',
-    price: 0,
-    images: ['https://images.unsplash.com/photo-1552053831-71594a27632d?w=600&q=80'],
-    description: 'Friendly Golden Retriever who loves kids and playing fetch. House trained and great with other pets.',
-    location: 'Downtown Shelter',
-    traits: ['Friendly', 'House Trained', 'Good with Kids', 'Playful'],
-    healthInfo: {
-      vaccinated: true,
-      spayedNeutered: true,
-      houseTrained: true,
-      specialNeeds: ''
-    },
-    contact: {
-      name: 'Downtown Animal Shelter',
-      email: 'contact@downtownshelter.com',
-      phone: '(555) 123-4567',
-      organization: 'Downtown Animal Shelter'
-    },
-    featured: true
+    name: 'Bruno', category: 'Dog', breed: 'Labrador Retriever', age: '2 years', gender: 'Male', size: 'Large', price: 12000,
+    images: getImages('labrador'), description: 'Friendly and energetic Labrador.', location: 'Bangalore, Karnataka', 
+    contact: { name: 'PetNest Shelter', email: 'help@petnest.com', phone: '9876543210' }
   },
   {
-    name: 'Bella',
-    category: 'Cat',
-    breed: 'Persian',
-    age: '2 years',
-    gender: 'Female',
-    size: 'Medium',
-    price: 75,
-    images: ['https://images.unsplash.com/photo-1513245543132-31f507417b26?w=600&q=80'],
-    description: 'Quiet Persian cat who loves naps and gentle cuddles. Perfect for calm households.',
-    location: 'City Cat Rescue',
-    traits: ['Quiet', 'Cuddly', 'Independent', 'Gentle'],
-    healthInfo: {
-      vaccinated: true,
-      spayedNeutered: true,
-      houseTrained: true,
-      specialNeeds: ''
-    },
-    contact: {
-      name: 'City Cat Rescue',
-      email: 'info@citycatrescue.org',
-      phone: '(555) 987-6543',
-      organization: 'City Cat Rescue'
-    },
-    featured: true
+    name: 'Rocky', category: 'Dog', breed: 'German Shepherd', age: '1 year', gender: 'Male', size: 'Large', price: 18000,
+    images: getImages('german-shepherd'), description: 'Smart and protective.', location: 'Delhi, NCR', 
+    contact: { name: 'PetNest Shelter', email: 'help@petnest.com', phone: '9876543210' }
   },
   {
-    name: 'Charlie',
-    category: 'Dog',
-    breed: 'Border Collie',
-    age: '2 years',
-    gender: 'Male',
-    size: 'Medium',
-    price: 150,
-    images: ['https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?w=600&q=80'],
-    description: 'Energetic Border Collie mix. Perfect for active families who love outdoor adventures.',
-    location: 'Westside Rescue',
-    traits: ['Energetic', 'Smart', 'Loyal', 'Active'],
-    healthInfo: {
-      vaccinated: true,
-      spayedNeutered: false,
-      houseTrained: true,
-      specialNeeds: ''
-    },
-    contact: {
-      name: 'Westside Animal Rescue',
-      email: 'adopt@westsiderescue.com',
-      phone: '(555) 456-7890',
-      organization: 'Westside Animal Rescue'
-    },
-    featured: false
+    name: 'Bella', category: 'Dog', breed: 'Golden Retriever', age: '3 years', gender: 'Female', size: 'Large', price: 15000,
+    images: getImages('golden-retriever'), description: 'The perfect family dog.', location: 'Mumbai, Maharashtra', 
+    contact: { name: 'PetNest Shelter', email: 'help@petnest.com', phone: '9876543210' }
   },
   {
-    name: 'Luna',
-    category: 'Dog',
-    breed: 'Husky',
-    age: '1 year',
-    gender: 'Female',
-    size: 'Large',
-    price: 0,
-    images: ['https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=600&q=80'],
-    description: 'Adorable Husky mix with beautiful blue eyes. Loves cold weather and long walks.',
-    location: 'Mountain Rescue',
-    traits: ['Beautiful', 'Active', 'Friendly', 'Independent'],
-    healthInfo: {
-      vaccinated: true,
-      spayedNeutered: true,
-      houseTrained: false,
-      specialNeeds: 'Needs daily exercise'
-    },
-    contact: {
-      name: 'Mountain Pet Rescue',
-      email: 'help@mountainpetrescue.org',
-      phone: '(555) 321-0987',
-      organization: 'Mountain Pet Rescue'
-    },
-    featured: true
+    name: 'Charlie', category: 'Dog', breed: 'Beagle', age: '1 year', gender: 'Male', size: 'Medium', price: 14000,
+    images: getImages('beagle'), description: 'Curious and merry Beagle.', location: 'Pune, Maharashtra', 
+    contact: { name: 'PetNest Shelter', email: 'help@petnest.com', phone: '9876543210' }
   },
   {
-    name: 'Whiskers',
-    category: 'Cat',
-    breed: 'Maine Coon',
-    age: '4 years',
-    gender: 'Male',
-    size: 'Large',
-    price: 0,
-    images: ['https://images.unsplash.com/photo-1533738363-b7f9aef128ce?w=600&q=80'],
-    description: 'Very independent and calm Maine Coon. Great with other pets and loves to explore.',
-    location: 'Feline Friends Sanctuary',
-    traits: ['Independent', 'Calm', 'Large', 'Friendly'],
-    healthInfo: {
-      vaccinated: true,
-      spayedNeutered: true,
-      houseTrained: true,
-      specialNeeds: ''
-    },
-    contact: {
-      name: 'Feline Friends Sanctuary',
-      email: 'cats@felinefriends.org',
-      phone: '(555) 654-3210',
-      organization: 'Feline Friends Sanctuary'
-    },
-    featured: false
+    name: 'Max', category: 'Dog', breed: 'Rottweiler', age: '2 years', gender: 'Male', size: 'Large', price: 20000,
+    images: getImages('rottweiler'), description: 'Loyal guardian.', location: 'Chennai, Tamil Nadu', 
+    contact: { name: 'PetNest Shelter', email: 'help@petnest.com', phone: '9876543210' }
+  },
+  {
+    name: 'Zoey', category: 'Dog', breed: 'Shih Tzu', age: '1 year', gender: 'Female', size: 'Small', price: 15000,
+    images: getImages('shih-tzu'), description: 'Adorable lap dog.', location: 'Hyderabad, Telangana', 
+    contact: { name: 'PetNest Shelter', email: 'help@petnest.com', phone: '9876543210' }
+  },
+  {
+    name: 'Cooper', category: 'Dog', breed: 'Pug', age: '3 years', gender: 'Male', size: 'Small', price: 10000,
+    images: getImages('pug'), description: 'Charming and mischievous.', location: 'Kolkata, WB', 
+    contact: { name: 'PetNest Shelter', email: 'help@petnest.com', phone: '9876543210' }
+  },
+  {
+    name: 'Luna', category: 'Dog', breed: 'Husky', age: '2 years', gender: 'Female', size: 'Large', price: 25000,
+    images: getImages('husky'), description: 'Energetic and vocal.', location: 'Chandigarh', 
+    contact: { name: 'PetNest Shelter', email: 'help@petnest.com', phone: '9876543210' }
+  },
+  {
+    name: 'Duke', category: 'Dog', breed: 'Boxer', age: '4 years', gender: 'Male', size: 'Large', price: 16000,
+    images: getImages('boxer-dog'), description: 'Fun-loving and bright.', location: 'Jaipur, Rajasthan', 
+    contact: { name: 'PetNest Shelter', email: 'help@petnest.com', phone: '9876543210' }
+  },
+  {
+    name: 'Oreo', category: 'Dog', breed: 'Dalmatian', age: '2 years', gender: 'Male', size: 'Large', price: 18000,
+    images: getImages('dalmatian'), description: 'Spotty and sporty.', location: 'Ahmedabad, Gujarat', 
+    contact: { name: 'PetNest Shelter', email: 'help@petnest.com', phone: '9876543210' }
+  },
+
+  // --- CATS ---
+  {
+    name: 'Misty', category: 'Cat', breed: 'Persian', age: '2 years', gender: 'Female', size: 'Medium', price: 8000,
+    images: getImages('persian-cat'), description: 'Fluffy and calm.', location: 'Mumbai, Maharashtra', 
+    contact: { name: 'PetNest Shelter', email: 'help@petnest.com', phone: '9876543210' }
+  },
+  {
+    name: 'Leo', category: 'Cat', breed: 'Siamese', age: '1 year', gender: 'Male', size: 'Medium', price: 9000,
+    images: getImages('siamese-cat'), description: 'Vocal and affectionate.', location: 'Delhi, NCR', 
+    contact: { name: 'PetNest Shelter', email: 'help@petnest.com', phone: '9876543210' }
+  },
+
+  // --- BIRDS ---
+  {
+    name: 'Rio', category: 'Bird', breed: 'Macaw', age: '5 years', gender: 'Male', size: 'Large', price: 45000,
+    images: getImages('macaw'), description: 'Colorful and talkative.', location: 'Goa', 
+    contact: { name: 'PetNest Shelter', email: 'help@petnest.com', phone: '9876543210' }
+  },
+  {
+    name: 'Sky', category: 'Bird', breed: 'Budgie', age: '1 year', gender: 'Female', size: 'Small', price: 1000,
+    images: getImages('budgie'), description: 'Sweet little friend.', location: 'Bangalore, Karnataka', 
+    contact: { name: 'PetNest Shelter', email: 'help@petnest.com', phone: '9876543210' }
   }
 ];
 
 const seedDatabase = async () => {
   try {
     await connectDB();
-    
-    // Clear existing data
     await Pet.deleteMany({});
-    console.log('✅ Cleared existing pets');
-    
-    // Insert sample data
-    const createdPets = await Pet.insertMany(samplePets);
-    console.log(`✅ ${createdPets.length} sample pets added successfully!`);
-    
-    console.log('🎉 Database seeded successfully!');
-    process.exit(0);
+    await Pet.insertMany(pets);
+    console.log('✅ Database seeded with 14+ Pets (8 Images each)!');
+    process.exit();
   } catch (error) {
-    console.error('❌ Error seeding database:', error);
+    console.error(error);
     process.exit(1);
   }
 };

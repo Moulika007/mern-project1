@@ -9,8 +9,8 @@ const {
   getFeaturedPets,
   likePet,
   getPetsByCategory
-} = require('../controller/petController');
-const { protect, admin } = require('../authMiddleware');
+} = require('../controllers/petController'); // Ensure plural 'controllers'
+const { protect, admin } = require('../middleware/authMiddleware'); // FIXED PATH
 const { body } = require('express-validator');
 
 // Validation middleware

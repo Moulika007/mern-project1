@@ -8,10 +8,9 @@ const {
   addToFavorites,
   removeFromFavorites,
   getFavorites
-} = require('../controller/userController');
-const { protect } = require('../authMiddleware');
-const { body } = require('express-validator');
-
+} = require('../controllers/userController');
+const { protect } = require('../middleware/authMiddleware'); // FIXED PATH
+const { body, validationResult } = require('express-validator');
 // Validation middleware
 const validateRegister = [
   body('name').notEmpty().withMessage('Name is required'),
@@ -24,7 +23,6 @@ const validateLogin = [
   body('password').notEmpty().withMessage('Password is required')
 ];
 
-// Public routes
 router.post('/register', validateRegister, registerUser);
 router.post('/login', validateLogin, loginUser);
 
