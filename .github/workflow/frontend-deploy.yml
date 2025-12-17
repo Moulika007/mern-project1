@@ -5,7 +5,7 @@ on:
     branches:
       - master
     paths:
-      - "Mernfrontintegratio/**"
+      - "FRONTEND/**"
 
 jobs:
   deploy:
@@ -22,12 +22,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd Mernfrontintegratio
+          cd FRONTEND
           npm install
 
       - name: Build frontend
         run: |
-          cd Mernfrontintegratio
+          cd FRONTEND
           npm run build
 
       - name: Configure AWS credentials
