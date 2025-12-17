@@ -8,8 +8,8 @@ const {
   addToFavorites,
   removeFromFavorites,
   getFavorites
-} = require('../controller/userController');
-const { protect } = require('../authMiddleware');
+} = require('./controllers/userController');
+const { protect } = require('./middleware/authMiddleware');
 const { body } = require('express-validator');
 
 // Validation middleware
