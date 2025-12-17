@@ -30,7 +30,7 @@ const Safety = () => {
             <AlertTriangle className="w-6 h-6 text-red-500 mr-2" /> Toxic Items (Don'ts)
           </h2>
           <ul className="space-y-4">
-            {['Chocolate & Caffeine', 'Grapes & Raisins', 'Lilies (highly toxic to cats)', 'Xylitol (gum/candy)', 'Human Medication'].map(item => (
+            {[ 'Grapes & Raisins', 'Lilies (highly toxic to cats)', 'Xylitol (gum/candy)', 'Human Medication'].map(item => (
               <li key={item} className="flex items-center text-gray-700 bg-red-50 p-3 rounded-lg">
                 <AlertTriangle className="w-4 h-4 text-red-600 mr-3" /> {item}
               </li>
