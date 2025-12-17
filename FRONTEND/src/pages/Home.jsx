@@ -25,7 +25,7 @@ const Home = () => {
 
   // Resources Data (From your screenshot)
   const resources = [
-    { title: 'Pet Care Guide', link: '/care-guide', icon: <BookOpen className="w-6 h-6 text-green-500" />, desc: 'Tips for new pet parents.' },
+    { title: 'Pet Care Guide', link: '/care-guide', icon: <BookOpen className="w-6 h-6 text-green-500" />, desc: 'which parent ' },
     { title: 'Adoption FAQs', link: '/faqs', icon: <HelpCircle className="w-6 h-6 text-orange-500" />, desc: 'Common questions answered.' },
     { title: 'Success Stories', link: '/success', icon: <Star className="w-6 h-6 text-yellow-500" />, desc: 'Read happy adoption tales.' },
     { title: 'Safety Tips', link: '/safety', icon: <Lock className="w-6 h-6 text-blue-500" />, desc: 'Keep your pet safe & secure.' },
