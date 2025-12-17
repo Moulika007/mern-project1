@@ -48,7 +48,7 @@ const Footer = () => {
             <h3 className="text-lg font-bold mb-6 text-white">Find Pets</h3>
             <ul className="space-y-3">
               {[
-                { label: '🐕 Adopt a Dog', href: '/' },
+                { label: '🐕 Adopt a Doggy pet �🦴🦴', href: '/' },
                 { label: '🐱 Adopt a Cat', href: '/cats' },
                 { label: '🐰 Small Pets', href: '/small-pets' },
                 { label: '🐦 Birds', href: '/birds' },
